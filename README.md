@@ -47,7 +47,7 @@ AI-Intrusion-Detection-Encrypted-Traffic/
 
 **Phase 3: Implementation and evaluation.** Builds the detector and evaluates it against seven re-implemented baselines under four protocols, with five seeds, confidence intervals, significance tests, ablations and error analysis.
 
-**Phase 4: Research paper.** Turns Phases 1–3 into a 12-page journal-style paper in the Springer Nature template. See [`Phase-04/README.md`](Phase-04/README.md).
+**Phase 4: Research paper.** Turns Phases 1–3 into a 12-page journal-style paper (plus appendices) in the Springer Nature template. See [`Phase-04/README.md`](Phase-04/README.md).
 
 ## Method in brief
 
@@ -81,7 +81,7 @@ AI-Intrusion-Detection-Encrypted-Traffic/
 3. **Configure.** Open `Phase-03/24i-0053_24i-0061_Phase3_Implementation.ipynb` and, in the configuration cell, set `DATA_2017_DIR`, `DATA_2018_DIR` and `OUT_DIR`.
 4. **Run top to bottom.** `QUICK_MODE = True` gives a 10-minute test run. The reported results use `QUICK_MODE = False` (5 seeds, about 2.5–3 hours). Each stage saves to `OUT_DIR`, so a crashed run can resume.
 
-**Reported environment:** Windows laptop, Intel Core i5-8365U (4 cores, 8 threads), 8 GB RAM, Python 3.13.9, NumPy 2.4.6, pandas 3.0.6. Latency is measured on one CPU thread.
+**Reported environment:** Windows laptop, Intel Core i5-8365U (4 cores, 8 threads), 8 GB RAM, Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn 1.9.1, XGBoost 3.4.1, PyTorch 2.13.0, SHAP 0.54.1. Latency is measured on one CPU thread.
 
 ## Citation
 

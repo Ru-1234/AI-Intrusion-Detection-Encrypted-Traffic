@@ -121,18 +121,18 @@ with $Q_p$ the empirical $p$-quantile. Figure~\ref{fig:arch} shows the pipeline.
 \centering
 \resizebox{0.84\textwidth}{!}{%
 \begin{tikzpicture}[
-  node distance=12mm and 4mm,
-  box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=12mm, text width=2.55cm, fill=white},
+  node distance=14mm and 4mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=12mm, text width=2.9cm, fill=white},
   arr/.style={-{Stealth[length=2mm]}, thick},
   grp/.style={draw, dashed, rounded corners=3pt, inner sep=2mm}]
-\node[box, fill=gray!10] (data) {CIC-IDS-2017 +\\CSE-CIC-IDS2018\\(19.1M flows)};
+\node[box, fill=gray!10] (data) {CIC-IDS-2017\\+ CSE-CIC-IDS2018\\(19.1M flows)};
 \node[box, right=of data] (filter) {Secure-port filter\\(22, 443, 465,\\993, 995, 8443)};
 \node[box, right=of filter] (clean) {Cleaning, dedup.,\\label conflicts,\\class caps};
 \node[box, right=of clean] (split) {Temporal split\\70/15/15 per\\(dataset, family)};
 \node[box, below=of split, fill=blue!6] (pre) {Preprocessing\\log1p, z-score,\\clip to $[-10,10]$};
 \node[box, left=of pre, fill=blue!6] (enc) {MLP encoder\\$68{\to}64{\to}32{\to}16$\\+ classifier (CE)};
-\node[box, left=of enc, fill=red!8] (head) {Open-set head\\prototypes $\boldsymbol{\mu}_c$\\$s=\max(\tilde{s}_{\mathrm{BB}},\tilde{s}_{\mathrm{PR}})$};
-\node[box, left=of head, fill=red!8] (thr) {Threshold $\tau$\\(99th percentile of\\benign validation)};
+\node[box, left=of enc, fill=red!8] (head) {Open-set head\\prototypes $\boldsymbol{\mu}_c$\\$s=\max(\tilde{s}_{\mathrm{BB}},\,\tilde{s}_{\mathrm{PR}})$};
+\node[box, left=of head, fill=red!8] (thr) {Threshold $\tau$\\(99th percentile\\of benign validation)};
 \node[box, below=of thr, fill=green!8] (alert) {Alert if $s(\mathbf{x})>\tau$};
 \node[box, right=of alert, fill=yellow!12] (xai) {Integrated /\\Expected Gradients\\on $s(\mathbf{x})$};
 \node[box, right=of xai, fill=yellow!12] (recal) {Recalibrate $\tau$ on\\1,000 unlabeled\\target benign flows};
@@ -144,8 +144,8 @@ with $Q_p$ the empirical $p$-quantile. Figure~\ref{fig:arch} shows the pipeline.
 \node[grp, fit=(data)(split)] (g1) {};
 \node[grp, fit=(pre)(thr)] (g2) {};
 \end{scope}
-\node[font=\scriptsize\bfseries, anchor=south west] at (g1.north west) {Data pipeline};
-\node[font=\scriptsize\bfseries, anchor=south west] at (g2.north west) {Proposed detector};
+\node[font=\scriptsize\bfseries, anchor=south west, inner sep=1.5pt] at (g1.north west) {Data pipeline};
+\node[font=\scriptsize\bfseries, anchor=south west, inner sep=1.5pt] at (g2.north west) {Proposed detector};
 \end{tikzpicture}}
 \caption{Architecture of the proposed approach: leakage-controlled data pipeline, detector (blue: representation; red: open-set scoring), and explanation and label-free recalibration (yellow), which address G5 and G3.}\label{fig:arch}
 \end{figure*}
@@ -194,13 +194,13 @@ s(\mathbf{x})=\max\big(\tilde{s}_{\mathrm{BB}},\,\tilde{s}_{\mathrm{PR}}\big).\l
 \end{equation}
 with $\sum_j\mathrm{IG}_j=s(\tilde{\mathbf{x}})-s(\tilde{\mathbf{x}}')$; Expected Gradients (EG) \cite{erion2021eg} averages over 64 benign references. Attributions are also grouped into 42 correlation clusters of near-duplicate features. On a new network, \textsc{Recalibrate} (Algorithm~\ref{alg:detector}) resets $\tau$ from unlabeled traffic assumed benign. A later version (v3) adds per-network quantile preprocessing, daily recalibration and a \emph{Hybrid} detector (maximum of the benign percentiles of $s$ and of a Random Forest).
 
-\textbf{Changes after Phase~2:} The public CSVs contain flow statistics but no packets or TLS fields, so the planned 10-packet CNN/GRU became an MLP on flow statistics and TLS filtering became a secure-port filter; random 5-fold cross-validation became a temporal split to avoid leakage; drift windows (G4) were dropped; feature selection uses Random Forest ranking; hash-centre and graph baselines are compared through reported results; and cost is measured on a laptop CPU instead of an edge device. Success criteria for each version were fixed before it was run, and all versions are reported.
+\textbf{Changes after Phase~2:} The public CSVs contain flow statistics but no packets or TLS fields, so the planned 10-packet CNN/GRU became an MLP on flow statistics and TLS filtering became a secure-port filter; random 5-fold cross-validation became a temporal split to avoid leakage; drift windows (G4) were dropped; feature selection uses Random Forest ranking; hash-centre and graph baselines are compared through reported results; and cost is measured on a laptop CPU instead of an edge device. Appendix Table~\ref{tab:A5} lists these changes. Success criteria for each version were fixed before it was run, and all versions are reported.
 
 %%==================================%%
 \section{Experimental Setup}\label{sec:setup}
 %%==================================%%
 
-\textbf{Datasets:} The study uses the Kaggle releases \cite{kaggle2017,kaggle2018} of CIC-IDS-2017 \cite{sharafaldin2018cicids} (2,830,743 flows) and CSE-CIC-IDS2018 (16,233,002 flows), mapped to 76 common CICFlowMeter features (23 volume, 22 timing, 19 length, 12 flag). As neither marks encrypted flows, only flows on ports $\{22, 443, 465, 993, 995, 8443\}$ are kept (2,752,911 flows, 14\%). The remaining families are benign, SSH brute force (both datasets), PortScan (2017) and Infiltration (2018); DoS/DDoS run on port 80 and drop out. Other Phase~2 datasets were unsuitable: no flow in the nine readable USTC-TFC2016 captures contained a TLS handshake record (checked with Scapy, even in Gmail, whose traffic largely goes to port 443), and every CIC-Darknet2020 flow is labelled Non-Tor with only application categories. In CIC-IDS-2017, ports 443/8443 alone contain a single attack type (325 PortScan flows), which motivated the six-port filter and the second dataset.
+\textbf{Datasets:} The study uses the Kaggle releases \cite{kaggle2017,kaggle2018} of CIC-IDS-2017 \cite{sharafaldin2018cicids} (2,830,743 flows) and CSE-CIC-IDS2018 (16,233,002 flows), mapped to 76 common CICFlowMeter features (23 volume, 22 timing, 19 length, 12 flag). As neither marks encrypted flows, only flows on ports $\{22, 443, 465, 993, 995, 8443\}$ are kept (2,752,911 flows, 14\%). The remaining families are benign, SSH brute force (both datasets), PortScan (2017) and Infiltration (2018); DoS/DDoS run on port 80 and drop out. Other Phase~2 datasets were unsuitable: no flow in the nine readable USTC-TFC2016 captures contained a TLS handshake record (checked with Scapy, even in Gmail, whose traffic largely goes to port 443), and every CIC-Darknet2020 flow is labelled Non-Tor with only application categories. In CIC-IDS-2017, ports 443/8443 alone contain a single attack type (325 PortScan flows), which motivated the six-port filter and the second dataset (Appendix Table~\ref{tab:A4}).
 
 \textbf{Cleaning and splits:} The cleaning step removed 1,961 rows with infinite or missing values, 40 negative durations, 470,510 duplicates and 23,262 label conflicts (flows whose features appear with two labels); 39\% of 2018 infiltration flows were identical to benign flows, consistent with known labelling issues \cite{engelen2021troubleshooting}. Benign and SSH flows were capped per dataset (about 100,000 and 20,000), sampled evenly across files. Each (dataset, family) group was split by time into 70/15/15\% train/validation/test (2017 by file and row order, as it lacks timestamps). All scalers, selections, prototypes and thresholds were fitted on training or validation data, and no identical feature vectors remained across labels, splits or datasets. Table~\ref{tab:data} gives the final 241,109 flows (83\% benign).
 
@@ -228,13 +228,13 @@ Dataset & Family & Train & Val. & Test \\
 
 \textbf{Baselines:} All baselines share features, splits, hardware and Eq.~(\ref{eq:tau}): Random Forest (100 trees, depth 20) \cite{pedregosa2011sklearn} and XGBoost (100 trees) \cite{chen2016xgboost} with the same class weights; Isolation Forest \cite{liu2008iforest} and an EVADE-style PCA + Elliptic Envelope \cite{rousseeuw1999mcd,haynes2025evade} on benign flows; and three scores of the same MLP: maximum softmax probability (MSP) \cite{hendrycks2017msp}, benign Mahalanobis distance \cite{lee2018mahalanobis} and MLP-closed ($1-p(\text{benign})$).
 
-\textbf{Metrics and implementation:} Since an always-benign detector already scores 83\% accuracy, the evaluation reports AUROC, PR-AUC, TPR at 1\% FPR, realised test FPR, precision and F1, plus accuracy and macro-F1 for classification. Results are means over seeds 0--4 (0--2 for ablations) with bootstrap 95\% intervals (200 resamples) and Wilcoxon signed-rank tests. The MLP uses Adam (learning rate $10^{-3}$, weight decay $10^{-5}$). Experiments ran on a Windows laptop with an Intel Core i5-8365U CPU (1.60\,GHz, 4 cores, 8 threads) and 8\,GB RAM, using Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn, XGBoost, PyTorch \cite{paszke2019pytorch} and SHAP \cite{lundberg2017shap}; Protocols A and B with all methods and seeds take about 20 minutes.
+\textbf{Metrics and implementation:} Since an always-benign detector already scores 83\% accuracy, the evaluation reports AUROC, PR-AUC, TPR at 1\% FPR, realised test FPR, precision and F1, plus accuracy and macro-F1 for classification. Results are means over seeds 0--4 (0--2 for ablations) with bootstrap 95\% intervals (200 resamples) and Wilcoxon signed-rank tests. The MLP uses Adam (learning rate $10^{-3}$, weight decay $10^{-5}$). Experiments ran on a Windows laptop with an Intel Core i5-8365U CPU (1.60\,GHz, 4 cores, 8 threads) and 8\,GB RAM, using Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn 1.9.1, XGBoost 3.4.1, PyTorch 2.13.0 \cite{paszke2019pytorch} and SHAP 0.54.1 \cite{lundberg2017shap}; Protocols A and B with all methods and seeds take about 20 minutes; full reproducibility details are given in Appendix~\ref{app:repro}.
 
 %%==================================%%
 \section{Results and Analysis}\label{sec:results}
 %%==================================%%
 
-\textbf{Known attacks (Protocol A):} Table~\ref{tab:protA} shows that XGBoost ranks attacks best (AUROC 0.950, 95\% CI $[0.948,0.952]$) and the proposed detector reaches 0.922 ($[0.919,0.926]$). The 1\% validation threshold, however, does not hold on later test days: realised FPR is 15.5\% for XGBoost and 16.8\% for Random Forest but 5.5\% for the proposed detector, which therefore has higher precision and F1 than the tree ensembles, MLP-closed and the Hybrid. Mahalanobis and the Benign-boundary component alone are more conservative (FPR 2.4\% and 1.4\%) but rank attacks worse (AUROC 0.771 and 0.823). Benign-only detectors and MSP are near chance. In classification, the tree models reach 85.2--85.4\% accuracy (macro-F1 0.821) and the MLP 82.3\% (0.788). SSH and PortScan are easy (AUROC $\approx$1.0), but 37--42\% of infiltration flows are predicted benign by every model (best infiltration AUROC 0.775).
+\textbf{Known attacks (Protocol A):} Table~\ref{tab:protA} shows that XGBoost ranks attacks best (AUROC 0.950, 95\% CI $[0.948,0.952]$) and the proposed detector reaches 0.922 ($[0.919,0.926]$). The 1\% validation threshold, however, does not hold on later test days: realised FPR is 15.5\% for XGBoost and 16.8\% for Random Forest but 5.5\% for the proposed detector, which therefore has higher precision and F1 than the tree ensembles, MLP-closed and the Hybrid. Mahalanobis and the Benign-boundary component alone are more conservative (FPR 2.4\% and 1.4\%) but rank attacks worse (AUROC 0.771 and 0.823). Benign-only detectors and MSP are near chance (full results with PR-AUC in Appendix Table~\ref{tab:A1}). In classification, the tree models reach 85.2--85.4\% accuracy (macro-F1 0.821) and the MLP 82.3\% (0.788). SSH and PortScan are easy (AUROC $\approx$1.0), but 37--42\% of infiltration flows are predicted benign by every model (best infiltration AUROC 0.775).
 
 \begin{table}[t]
 \caption{Protocol A: known-attack detection at the 1\% validation threshold (mean, with AUROC $\pm$ std, over 5 seeds).}\label{tab:protA}
@@ -333,7 +333,7 @@ Hybrid (v3) & 10.70 & 13.62 & 22,894 & 46.30 \\
 \caption{Mean unseen-family AUROC (Protocol B) against CPU latency.}\label{fig:cost}
 \end{figure}
 
-\textbf{Explainability (G5):} A TreeSHAP surrogate copies 99.8\% of the detector's decisions but disagrees with KernelSHAP on the real detector (top-10 Jaccard 0.11), so it was rejected. Gradient explanations on the detector itself are \emph{faithful}: replacing the top-10 IG features with benign values removes every unseen-family alert, against 35\% for random features (Figure~\ref{fig:xai}, left); \emph{complete} within about 2\%; \emph{stable} across seeds once grouped into clusters (Jaccard 0.79 and 0.73); and \emph{cheap} (p95 1.47\ms{}, similar to scoring, against 34.8\ms{} for KernelSHAP). As a qualitative example, alerts on unseen infiltration rest mainly on forward TCP header and window features (\texttt{fwd\_header\_len}, \texttt{min\_seg\_size\_fwd}, \texttt{init\_win\_fwd}; Figure~\ref{fig:xai}, right), which tells an analyst that these flows were flagged for their TCP header and window behaviour. The detector also relies on clusters that shift more between datasets (KS 0.22--0.27 vs.\ 0.19 on average), which explains its weak SSH transfer. Because G1 fails, few unseen alerts exist to explain (103 in v1). The best version passes 5 of 6 criteria; G5 is partly achieved.
+\textbf{Explainability (G5):} A TreeSHAP surrogate copies 99.8\% of the detector's decisions but disagrees with KernelSHAP on the real detector (top-10 Jaccard 0.11), so it was rejected. Gradient explanations on the detector itself are \emph{faithful}: replacing the top-10 IG features with benign values removes every unseen-family alert, against 35\% for random features (Figure~\ref{fig:xai}, left); \emph{complete} within about 2\%; \emph{stable} across seeds once grouped into clusters (Jaccard 0.79 and 0.73); and \emph{cheap} (p95 1.47\ms{}, similar to scoring, against 34.8\ms{} for KernelSHAP). As a qualitative example, alerts on unseen infiltration rest mainly on forward TCP header and window features (\texttt{fwd\_header\_len}, \texttt{min\_seg\_size\_fwd}, \texttt{init\_win\_fwd}; Figure~\ref{fig:xai}, right), which tells an analyst that these flows were flagged for their TCP header and window behaviour. The detector also relies on clusters that shift more between datasets (KS 0.22--0.27 vs.\ 0.19 on average), which explains its weak SSH transfer. Because G1 fails, few unseen alerts exist to explain (103 in v1). The best version passes 5 of 6 criteria (Appendix Table~\ref{tab:A3}); G5 is partly achieved.
 
 \begin{figure*}[t]
 \centering
@@ -390,7 +390,7 @@ XGBoost$^{\dagger}$ (temp.) & AUROC 0.950, F1 0.651 & 1.18\ms \\
 \end{tabular}
 \end{table}
 
-\textbf{Effect of the protocol:} Re-running Protocol A with a random split on the cleaned data raises Random Forest accuracy from 85.2\% to 95.9\% (XGBoost: 85.3\% to 95.0\%), close to the 97.29\% that DC-GL reports on CIC-IDS-2017, and realised FPR falls to the intended 1\%. Keeping duplicates exposes 13.5\% of test flows in training (68.5\% for PortScan). The proposed detector gains less (AUROC 0.920 to 0.937; Figure~\ref{fig:split}).
+\textbf{Effect of the protocol:} Re-running Protocol A with a random split on the cleaned data raises Random Forest accuracy from 85.2\% to 95.9\% (XGBoost: 85.3\% to 95.0\%), close to the 97.29\% that DC-GL reports on CIC-IDS-2017, and realised FPR falls to the intended 1\%. Keeping duplicates exposes 13.5\% of test flows in training (68.5\% for PortScan). The proposed detector gains less (AUROC 0.920 to 0.937; Figure~\ref{fig:split}, Appendix Table~\ref{tab:A2}).
 
 \begin{figure*}[t]
 \centering
@@ -453,13 +453,135 @@ This paper proposed a lightweight open-set detector for encrypted-port flows and
 
 \backmatter
 
-\bmhead{Acknowledgements}
-The authors thank Ms.\ Laraib (Computer Networks, FAST-NUCES) for guidance throughout this project, and the Canadian Institute for Cybersecurity for the public datasets.
-
 \section*{Declarations}
-\textbf{Funding:} none. \textbf{Competing interests:} none. \textbf{Ethics:} not applicable (public, anonymised data). \textbf{Data availability:} CIC-IDS-2017 and CSE-CIC-IDS2018 are public \cite{kaggle2017,kaggle2018}; all preprocessing steps and counts are given in Section~\ref{sec:setup}. \textbf{Code availability:} the full implementation, including the notebook \texttt{24i-0053\_24i-0061\_Phase3\_CNET.ipynb} and this manuscript's \LaTeX{} source, is available at \url{https://github.com/Ru-1234/AI-Intrusion-Detection-Encrypted-Traffic}.
-\textbf{Reproducibility:} seeds 0--4; ports, caps, split, threshold, architecture and optimiser settings are given in Sections~\ref{sec:method}--\ref{sec:setup}; Random Forest/XGBoost use 100 trees (RF depth 20), Isolation Forest 100 trees, recalibration 1,000 flows, EG 64 references and KernelSHAP 200 samples. \textbf{Author contributions:} both authors contributed equally to all parts of the work. \textbf{Use of AI tools:} Claude (Anthropic) was used to help structure and typeset this manuscript from the authors' Phase~1--3 reports; all experiments, code, results and interpretations are the authors' own, and the authors checked every number and take full responsibility for the content.
+
+\newcommand{\declhead}[1]{\par\medskip\noindent\textbf{\textit{#1}}\par\smallskip\noindent\ignorespaces}
+
+\declhead{Data availability.}
+CIC-IDS-2017 and CSE-CIC-IDS2018 are publicly available from the Canadian Institute for Cybersecurity \cite{sharafaldin2018cicids}; the CSV files used here are the Kaggle releases \cite{kaggle2017,kaggle2018}. All preprocessing steps and row counts are given in Section~\ref{sec:setup}, and all reported results can be reproduced with the released notebook.
+
+\declhead{Code availability.}
+The notebook that loads, pre-processes and evaluates the data (\texttt{Phase-03/\allowbreak 24i-0053\_\allowbreak 24i-0061\_\allowbreak Phase3\_\allowbreak Implementation.ipynb}), the Phase~3 report and the \LaTeX{} source of this paper are available at \url{https://github.com/Ru-1234/AI-Intrusion-Detection-Encrypted-Traffic}.
+
+\declhead{Conflict of interest.}
+None declared.
+
+\declhead{Funding.}
+None declared.
+
+\declhead{Use of AI tools.}
+AI-assisted tools were used for code support, drafting support, language editing and LaTeX formatting. All experiments, results and interpretations are the authors’ own. 
 
 \bibliography{references}
+
+\begin{appendices}
+
+\section{Additional tables}\label{app:tables}
+
+\begin{table*}[!htbp]
+\caption{Protocol A in full: known-attack detection at the 1\% validation threshold, mean $\pm$ std over 5 seeds, including the open-set score components.}\label{tab:A1}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Method & AUROC & PR-AUC & TPR@1\%FPR & Realised FPR & Precision & F1 \\
+\midrule
+XGBoost & \textbf{0.950}$\pm$0.000 & \textbf{0.850}$\pm$0.001 & \textbf{0.605}$\pm$0.002 & 15.5\% & 0.529 & 0.651 \\
+Random Forest & 0.940$\pm$0.002 & 0.773$\pm$0.027 & 0.227$\pm$0.311 & 16.8\% & 0.515 & 0.646 \\
+Hybrid (v3) & 0.938$\pm$0.001 & 0.800$\pm$0.006 & 0.482$\pm$0.083 & 15.9\% & 0.521 & 0.644 \\
+MLP-closed & 0.932$\pm$0.002 & 0.803$\pm$0.003 & 0.571$\pm$0.005 & 8.4\% & 0.625 & 0.649 \\
+\textbf{Proposed} & 0.922$\pm$0.003 & 0.798$\pm$0.004 & 0.556$\pm$0.004 & 5.5\% & 0.710 & 0.679 \\
+Benign-boundary (component) & 0.823 & -- & -- & 1.4\% & \textbf{0.895} & \textbf{0.698} \\
+Mahalanobis & 0.771$\pm$0.012 & 0.648$\pm$0.066 & 0.520$\pm$0.106 & 2.4\% & 0.835 & 0.682 \\
+Isolation Forest & 0.532$\pm$0.031 & 0.170$\pm$0.010 & 0.014$\pm$0.001 & 2.1\% & 0.163 & 0.035 \\
+MSP & 0.521$\pm$0.033 & 0.192$\pm$0.007 & 0.010$\pm$0.002 & 2.3\% & 0.185 & 0.045 \\
+Elliptic Envelope & 0.433$\pm$0.002 & 0.138$\pm$0.000 & 0.000$\pm$0.000 & \textbf{0.9\%} & 0.000 & 0.000 \\
+\botrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!htbp]
+\caption{The same models and features under different evaluation setups (Protocol A).}\label{tab:A2}
+\footnotesize
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Model & Setting & Accuracy & Macro-F1 & AUROC & Realised FPR \\
+\midrule
+Random Forest & Temporal (this study) & 85.2\% & 0.821 & 0.939 & 16.7\% \\
+Random Forest & Random, cleaned & 95.9\% & 0.927 & 0.989 & 1.0\% \\
+Random Forest & Random, duplicates kept & 90.0\% & 0.894 & 0.972 & 1.0\% \\
+XGBoost & Temporal (this study) & 85.3\% & 0.821 & 0.950 & 15.6\% \\
+XGBoost & Random, cleaned & 95.0\% & 0.915 & 0.988 & 1.0\% \\
+XGBoost & Random, duplicates kept & 88.6\% & 0.888 & 0.971 & 1.0\% \\
+Proposed & Temporal (this study) & -- & -- & 0.920 & 5.2\% \\
+Proposed & Random, cleaned & -- & -- & 0.937 & 1.0\% \\
+Proposed & Random, duplicates kept & -- & -- & 0.883 & 0.9\% \\
+\botrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!htbp]
+\caption{Explanation versions against criteria fixed before each run.}\label{tab:A3}
+\footnotesize
+\begin{tabular}{@{}L{2.5cm}L{2.6cm}L{2.7cm}L{2.4cm}L{2.7cm}c@{}}
+\toprule
+Version & Faithful & Stable across seeds & Agrees with KernelSHAP & Transfers across datasets & Passed \\
+\midrule
+v1: IG & Yes (2.5--2.9$\times$ random) & No (0.54 / 0.20) & Yes (0.45 vs.\ 0.16) & Yes (0.64) & 7/9 \\
+v2: extended tests & Yes (2.8--3.6$\times$ random) & Yes, clusters (0.79 / 0.73) & Yes (0.46 vs.\ 0.17) & No (Proposed), yes (RF) & 5/6 \\
+v3: EG & Closed-set only & Yes (0.86 / 0.67) & Not testable & Yes (0.67 / 0.82) & 3/5 \\
+\botrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!htbp]
+\caption{Suitability of the candidate datasets for encrypted attack detection.}\label{tab:A4}
+\footnotesize
+\begin{tabular}{@{}L{3.2cm}L{5.4cm}L{6.4cm}@{}}
+\toprule
+Dataset & Check & Finding \\
+\midrule
+USTC-TFC2016 & TLS handshake records in reconstructed TCP flows (Scapy) & 0 TLS flows in all 9 readable captures; 2 captures unreadable; Zeus payloads mostly zeroed \\
+CIC-Darknet2020 & Label distribution & All 88,640 labelled flows are Non-Tor; only application categories, no attack class \\
+CIC-IDS-2017 (ports 443/8443) & Label distribution on TLS ports & 235,533 flows; the only attack is PortScan (325 flows) \\
+CIC-IDS-2017 (6 secure ports) & Label distribution on secure ports & PortScan rises to 876 flows \\
+\botrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!htbp]
+\caption{Changes from the Phase~2 plan to the final implementation.}\label{tab:A5}
+\footnotesize
+\begin{tabular}{@{}L{4.2cm}L{4.2cm}L{6.6cm}@{}}
+\toprule
+Phase~2 plan & Implementation & Reason \\
+\midrule
+First 10 packets, 1D-CNN/GRU & Flow statistics, MLP & The public CSV releases contain flow statistics, not packets \\
+Five datasets & CIC-IDS-2017, CSE-CIC-IDS2018 & Other datasets unsuitable (Table~\ref{tab:A4}) \\
+TLS-filtered flows & Secure-port filter & The CSVs have no TLS fields \\
+5-fold cross-validation & Temporal split 70/15/15 & Random folds leak information across time \\
+Drift windows (G4, Protocol D) & Removed & Scope; G4 is not claimed \\
+Boruta/SHAP feature selection & Random Forest top-$k$ & Cheaper; fitted on training data only \\
+Hash-centre and CNN-GCN-LSTM baselines & Compared from reported results & They require packets or graphs \\
+Edge-device latency & Laptop CPU, one thread & No edge device was available \\
+\botrule
+\end{tabular}
+\end{table*}
+
+\section{Reproducibility}\label{app:repro}
+
+\declhead{Pipeline.}
+The notebook \texttt{24i-0053\_\allowbreak 24i-0061\_\allowbreak Phase3\_\allowbreak Implementation.ipynb} runs the whole study top to bottom: setup and configuration; data audit and column mapping; loading of secure-port flows; cleaning, temporal splits and leakage checks; model and metric code; Protocols A and B; Protocol C (with the v2 and v3 variants); Protocol E (CPU cost); explanations (IG, extended tests, EG); ablations, statistics and error analysis; and figures, literature comparison and the random-versus-temporal split experiment. Every filter prints its row counts, and each stage saves its outputs to \texttt{OUT\_DIR} so that an interrupted run can resume.
+
+\declhead{Seeds and splits.}
+Seeds 0--4 for the main results and 0--2 for ablations and v3. Each (dataset, family) group is split by time into 70/15/15\% train/validation/test; CIC-IDS-2017 is ordered by file and then row order. Thresholds are the 99th percentile of benign validation scores (target FPR 1\%). Bootstrap intervals use 200 resamples (negatives capped at 30,000).
+
+\declhead{Hyperparameters.}
+MLP 68$\to$64$\to$32$\to$16 (ReLU) with a linear classifier (7,092 parameters); Adam, learning rate $10^{-3}$, weight decay $10^{-5}$, batch 512, at most 30 epochs, early stopping with patience 5; class weights $\sqrt{N/(Kn_c)}$, also used as sample weights for Random Forest and XGBoost. Random Forest: 100 trees, depth 20; XGBoost: 100 trees; Isolation Forest: 100 trees on $\le$100,000 benign flows; Elliptic Envelope: PCA + MCD on $\le$20,000 benign flows. Caps per dataset: benign 100,000 (benign on port 22: 20,000), SSH 20,000; families need at least 200 flows. Recalibration: 1,000 unlabeled benign target flows (sweep 100, 300, 1,000, 3,000). Explanations: IG with a benign baseline, EG with 64 benign references, KernelSHAP with 200 samples.
+
+\declhead{Environment.}
+Windows laptop, Intel Core i5-8365U (1.60\,GHz, 4 cores, 8 threads), 8\,GB RAM, no GPU; Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn 1.9.1, XGBoost 3.4.1, PyTorch 2.13.0 (CPU build) and SHAP 0.54.1. The full run (\texttt{QUICK\_MODE = False}) takes about 2.5--3 hours; \texttt{QUICK\_MODE = True} gives a 10-minute test run. Latency is measured on one CPU thread.
+
+\end{appendices}
+
 
 \end{document}

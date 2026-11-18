@@ -6,7 +6,7 @@ Romaisa (24I-0061) · Maham Anjum (24I-0053)
 Department of Artificial Intelligence and Data Science, FAST-NUCES Islamabad
 Computer Networks Research Project, Section AI-5C. Instructor: Ms. Laraib
 
-This folder contains the final research paper, which turns the work from Phases 1–3 into a journal-style manuscript using the Springer Nature LaTeX template (two-column layout, 12 pages including references).
+This folder contains the final research paper, which turns the work from Phases 1–3 into a journal-style manuscript using the Springer Nature LaTeX template (two-column layout, 12 pages including references, plus appendices).
 
 ## Contents
 
@@ -72,5 +72,5 @@ All results come from the Phase 3 experiments (see `../Phase-03`), on 241,109 cl
 - **Split:** 70/15/15 by time within each (dataset, family) group
 - **Seeds:** 0–4 for main results, 0–2 for ablations
 - **Hardware:** Intel Core i5-8365U (4 cores, 8 threads), 8 GB RAM, Windows
-- **Software:** Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn, XGBoost, PyTorch, SHAP
+- **Software:** Python 3.13.9, NumPy 2.4.6, pandas 3.0.6, scikit-learn 1.9.1, XGBoost 3.4.1, PyTorch 2.13.0, SHAP 0.54.1
 - **Code:** see `../Phase-03` for the implementation notebook
