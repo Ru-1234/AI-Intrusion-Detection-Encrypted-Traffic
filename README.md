@@ -4,7 +4,7 @@ A lightweight intrusion detection system for encrypted network traffic. It combi
 
 **Romaisa** (24I-0061) · **Maham Anjum** (24I-0053)
 Department of Artificial Intelligence and Data Science, FAST-NUCES Islamabad
-Computer Networks Research Project, Section AI-5C. Instructor: Ms. Laraib
+Computer Networks Research Project, Section AI-5C. 
 
 ---
 
