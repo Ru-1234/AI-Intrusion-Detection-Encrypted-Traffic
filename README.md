@@ -2,13 +2,16 @@
 
 A lightweight intrusion detection system for encrypted network traffic. It combines a compact neural network, prototype-based open-set scoring, temporal evaluation, cross-dataset transfer and explainable AI.
 
-**Romaisa** (24I-0061) · **Maham Anjum** (24I-0053)
+**Romaisa** (24I-0061) | **Maham Anjum** (24I-0053)
+
 Department of Artificial Intelligence and Data Science, FAST-NUCES Islamabad
 Computer Networks Research Project, Section AI-5C. 
 
 ---
 
 ## Overview
+
+**Project Overview:** [Watch on YouTube](https://www.youtube.com/watch?v=FjQyvC1zX0o)
 
 Encryption (TLS, SSH, QUIC) hides packet payloads, so an intrusion detection system must work from flow metadata: packet sizes, timing, TCP flags and volume. Published encrypted-traffic detectors report 94–99% accuracy, but most are tested with random splits, on GPUs and on a single dataset, without explaining their alerts.
 
